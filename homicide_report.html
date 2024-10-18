@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homicide Data Analysis</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        .container { width: 80%; margin: 0 auto; }
+        h1, h2 { text-align: center; color: #B22222; }
+        .image-container { text-align: center; margin-bottom: 30px; }
+        img { width: 80%; max-width: 600px; border: 2px solid #ccc; }
+        iframe { width: 100%; height: 500px; border: none; }
+        .stats { margin-bottom: 20px; }
+        .stat { font-size: 1.2em; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Homicide Data Analysis Report</h1>
+        <div class="stats">
+            <h2>Key Insights</h2>
+            <p class="stat"><strong>Total Homicides:</strong> 132</p>
+            <p class="stat"><strong>Most Common Day for Homicides:</strong> Sunday</p>
+        </div>
+        <div class="image-container">
+            <h2>Homicides by Day of the Week</h2>
+            <img src="output_images/homicides_by_day_of_week.png" alt="Homicides by Day of the Week">
+        </div>
+        <div class="image-container">
+            <h2>Homicides by Time of Day (Hourly)</h2>
+            <img src="output_images/homicides_by_time_of_day.png" alt="Homicides by Time of Day">
+        </div>
+        <div class="image-container">
+            <h2>Homicides Locations (Toggleable Points and Heatmap)</h2>
+            <iframe src="output_images/homicides_map_toggle.html"></iframe>
+        </div>
+    </div>
+</body>
+</html>
