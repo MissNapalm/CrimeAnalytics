@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 import folium
-from folium.plugins import HeatMap, MarkerCluster
+from folium.plugins import HeatMap, MarkerCluster, Fullscreen
 import matplotlib.pyplot as plt
 import seaborn as sns
 from jinja2 import Template
@@ -77,8 +77,25 @@ HeatMap(heat_data).add_to(heatmap_layer)
 # Add a layer of points (MarkerCluster)
 marker_cluster_layer = folium.FeatureGroup(name='Points')
 marker_cluster = MarkerCluster().add_to(marker_cluster_layer)
+
+# Add markers for each homicide record
 for idx, row in homicide_map_df.iterrows():
-    folium.Marker([row['Latitude'], row['Longitude']], popup=f"Homicide on {row['Date']}, {row['Block']}").add_to(marker_cluster)
+    # Creating a popup with crime description, arrest status, and date
+    popup_info = f"""
+    <strong>Homicide Details:</strong><br>
+    <strong>Description:</strong> {row['Description']}<br>
+    <strong>Arrest Made:</strong> {'Yes' if row['Arrest'] else 'No'}<br>
+    <strong>Date:</strong> {row['Date'].strftime('%B %d, %Y')}<br>
+    <strong>Location:</strong> {row['Block']}
+    """
+    folium.Marker(
+        location=[row['Latitude'], row['Longitude']],
+        popup=popup_info,
+        icon=folium.Icon(color='red')
+    ).add_to(marker_cluster)
+
+# Add Fullscreen button
+Fullscreen(position='topright', force_separate_button=True).add_to(homicide_map)
 
 # Add both layers to the map with LayerControl for toggling
 heatmap_layer.add_to(homicide_map)
@@ -91,6 +108,25 @@ homicide_map.save('output_images/homicides_map_toggle.html')
 # Additional Insights
 total_homicides = len(homicide_df)
 most_common_day = homicide_df['Day of Week'].value_counts().idxmax()
+most_common_time = homicide_df['Hour'].value_counts().idxmax()
+
+# Average age of victims
+if 'Vict Age' in homicide_df.columns:
+    avg_victim_age = homicide_df['Vict Age'].mean()
+else:
+    avg_victim_age = "Not available"
+
+# Gender distribution of victims
+if 'Vict Sex' in homicide_df.columns:
+    gender_distribution = homicide_df['Vict Sex'].value_counts().to_dict()
+else:
+    gender_distribution = "Not available"
+
+# Percentage of homicides where arrest was made
+arrests_made = homicide_df['Arrest'].mean() * 100
+
+# Top 5 locations for homicides
+top_5_locations = homicide_df['Premis Desc'].value_counts().head(5)
 
 # HTML template to display results
 html_template = """
@@ -109,6 +145,10 @@ html_template = """
         iframe { width: 100%; height: 500px; border: none; }
         .stats { margin-bottom: 20px; }
         .stat { font-size: 1.2em; margin: 10px 0; }
+        .top-locations, .gender-dist {
+            margin: 20px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +158,22 @@ html_template = """
             <h2>Key Insights</h2>
             <p class="stat"><strong>Total Homicides:</strong> {{ total_homicides }}</p>
             <p class="stat"><strong>Most Common Day for Homicides:</strong> {{ most_common_day }}</p>
+            <p class="stat"><strong>Most Common Time for Homicides:</strong> {{ most_common_time }}:00</p>
+            <p class="stat"><strong>Average Age of Victims:</strong> {{ avg_victim_age }}</p>
+            <p class="stat"><strong>Percentage of Arrests Made:</strong> {{ arrests_made }}%</p>
+        </div>
+        <div class="gender-dist">
+            <h2>Gender Distribution of Victims</h2>
+            <p class="stat"><strong>Male Victims:</strong> {{ gender_distribution.get('M', 'N/A') }}</p>
+            <p class="stat"><strong>Female Victims:</strong> {{ gender_distribution.get('F', 'N/A') }}</p>
+        </div>
+        <div class="top-locations">
+            <h2>Top 5 Locations for Homicides</h2>
+            <ul>
+            {% for location, count in top_5_locations.items() %}
+                <li>{{ location }}: {{ count }}</li>
+            {% endfor %}
+            </ul>
         </div>
         <div class="image-container">
             <h2>Homicides by Day of the Week</h2>
@@ -138,13 +194,4 @@ html_template = """
 
 # Render the HTML with Jinja2
 template = Template(html_template)
-html_content = template.render(
-    total_homicides=total_homicides,
-    most_common_day=most_common_day
-)
-
-# Save the HTML report
-with open('homicide_report.html', 'w') as file:
-    file.write(html_content)
-
-print("Homicide analysis report has been generated and saved as 'homicide_report.html'.")
+html_content = template.render
